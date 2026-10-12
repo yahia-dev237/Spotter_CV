@@ -1,0 +1,4 @@
+opencv-python
+numpy
+# the scripts use the classic mp.solutions API (pose, hands, face_detection)
+mediapipe==0.10.14
