@@ -1,4 +1,4 @@
-# Spotter – Flutter app
+# Spotter – Flutter app -CV
 
 The Android app of Spotter. See the [main README](../README.md) for the full description.
 
