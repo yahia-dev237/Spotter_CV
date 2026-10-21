@@ -44,16 +44,36 @@ spotter/
 ```
 
 The project started as a Python prototype running on a laptop webcam and was then ported to Dart/Flutter
-to run on Android phones. The Dart code mirrors the Python modules:
+to run on Android phones.
+
+The Flutter app follows **clean architecture**: each feature has a `domain` layer (entities, repository
+interfaces, use cases, pure Dart), a `data` layer (ML Kit and the exercise catalogue behind those
+interfaces) and a `presentation` layer (BLoC + screens + widgets). Dependencies are wired with `get_it`
+in `injection_container.dart`.
+
+```
+app/lib/
+├── main.dart
+├── injection_container.dart
+├── core/                      shared: camera frame + converter, errors, use case base, theme, widgets
+└── features/
+    ├── pose_coaching/         the 4 trainers, the menu and the Pose Estimation demo
+    │   ├── domain/            entities, IPoseEstimator, IExerciseRepository, use cases, RepCounter
+    │   ├── data/              ML Kit pose detector, landmark smoother, exercise catalogue
+    │   └── presentation/      TrainerBloc, PoseBloc, ExerciseMenuCubit, screens, widgets
+    └── face_detection/        the Face Detection demo (same layers)
+```
+
+The Dart code mirrors the Python modules:
 
 | Python | Dart (`app/lib`) |
 |---|---|
-| `Main.py` – choose the training | `main.dart` – menu screen |
-| `PoseModule.py` – `findPose`, `findPosition`, `findAngle` | `pose_module.dart` (same angle math) |
-| `AiTrainer.py`, `SquatTrainer.py`, `DeadliftTrainer.py`, `BenchPressTrainer.py` | `trainer.dart` – one trainer, the 4 exercises are settings |
-| `FaceDetectionModule` | `face_detection_module.dart` |
-| `cv2.VideoCapture` loop + `cv2.imshow` | `camera_view.dart` |
-| `cv2.line/circle/rectangle/putText`, `np.interp` | `cv.dart` |
+| `Main.py` – choose the training | `features/pose_coaching/presentation/screens/training_menu_screen.dart` |
+| `PoseModule.py` – `findPose`, `findPosition`, `findAngle` | `features/pose_coaching/data/` (ML Kit + smoothing) and `RepCounter` (same angle math) |
+| `AiTrainer.py`, `SquatTrainer.py`, `DeadliftTrainer.py`, `BenchPressTrainer.py` | `features/pose_coaching/domain/services/rep_counter.dart` – one trainer, the 4 exercises are settings |
+| `FaceDetectionModule` | `features/face_detection/` |
+| `cv2.VideoCapture` loop + `cv2.imshow` | `core/widgets/camera_view.dart` |
+| `cv2.line/circle/rectangle/putText`, `np.interp` | `core/widgets/overlay_canvas.dart`, `core/utils/cv_math.dart` |
 
 ## Tech
 

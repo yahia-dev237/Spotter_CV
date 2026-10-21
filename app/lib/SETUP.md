@@ -3,7 +3,7 @@
 1. `pubspec.yaml`: add `google_fonts: ^6.2.1` (Space Grotesk, IBM Plex Sans, Cairo for Arabic).
    For offline gyms, download the fonts once and bundle them as assets
    (google_fonts picks bundled files automatically, see its docs).
-2. Copy `lib/spotter_theme.dart` and `lib/trainer_page.dart` into your project.
+2. The theme is `lib/core/theme/app_theme.dart` and the shared widgets are `lib/core/widgets/spot_widgets.dart`.
 3. In `main.dart`:
    ```dart
    MaterialApp(theme: spotterTheme(), darkTheme: spotterTheme(), themeMode: ThemeMode.dark, ...)
