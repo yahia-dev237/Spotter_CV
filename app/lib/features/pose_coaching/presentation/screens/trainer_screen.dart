@@ -8,8 +8,9 @@ import 'package:ai_trainer/core/utils/cv_math.dart';
 import 'package:ai_trainer/core/widgets/camera_view.dart';
 import 'package:ai_trainer/core/widgets/overlay_canvas.dart';
 import 'package:ai_trainer/core/widgets/spot_widgets.dart';
-import 'package:ai_trainer/features/pose_coaching/domain/entities/exercise.dart';
-import 'package:ai_trainer/features/pose_coaching/domain/services/rep_counter.dart';
+import 'package:ai_trainer/features/pose_coaching/domain/entities/exercise_kind.dart';
+import 'package:ai_trainer/features/pose_coaching/domain/entities/exercise_rule_set.dart';
+import 'package:ai_trainer/features/pose_coaching/domain/entities/posture_assessment.dart';
 import 'package:ai_trainer/features/pose_coaching/presentation/bloc/trainer_bloc/trainer_bloc.dart';
 import 'package:ai_trainer/features/pose_coaching/presentation/widgets/form_colors.dart';
 import 'package:ai_trainer/features/pose_coaching/presentation/widgets/rest_overlay.dart';
@@ -20,21 +21,21 @@ import 'package:ai_trainer/injection_container.dart';
 
 /// AiTrainer.py / SquatTrainer.py / DeadliftTrainer.py / BenchPressTrainer.py
 class TrainerScreen extends StatelessWidget {
-  const TrainerScreen({super.key, required this.exercise});
-  final Exercise exercise;
+  const TrainerScreen({super.key, required this.ruleSet});
+  final ExerciseRuleSet ruleSet;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => sl<TrainerBloc>()..add(TrainerStarted(exercise: exercise)),
-      child: _TrainerView(exercise: exercise),
+      create: (_) => sl<TrainerBloc>()..add(TrainerStarted(exerciseId: ruleSet.exerciseId)),
+      child: _TrainerView(ruleSet: ruleSet),
     );
   }
 }
 
 class _TrainerView extends StatefulWidget {
-  const _TrainerView({required this.exercise});
-  final Exercise exercise;
+  const _TrainerView({required this.ruleSet});
+  final ExerciseRuleSet ruleSet;
 
   @override
   State<_TrainerView> createState() => _TrainerViewState();
@@ -85,7 +86,7 @@ class _TrainerViewState extends State<_TrainerView> with WidgetsBindingObserver 
 
   /// Finish button: ends the set and opens the rest screen
   void _finishSet() {
-    if ((_bloc.state.counter?.setReps ?? 0) == 0) {
+    if ((_bloc.state.assessment?.sets.setReps ?? 0) == 0) {
       _needARep();
       return;
     }
@@ -97,7 +98,7 @@ class _TrainerViewState extends State<_TrainerView> with WidgetsBindingObserver 
     final res = await showRestTimerDialog(context, restSeconds: s.restSeconds, resting: s.resting);
     if (!mounted || res == null) return;
     final now = _bloc.state;
-    if (res.startRest && !now.paused && (now.counter?.setReps ?? 0) == 0) {
+    if (res.startRest && !now.paused && (now.assessment?.sets.setReps ?? 0) == 0) {
       _bloc.add(RestTimeChanged(seconds: res.seconds));
       _needARep();
       return;
@@ -108,7 +109,7 @@ class _TrainerViewState extends State<_TrainerView> with WidgetsBindingObserver 
   /// the rest timer ran out: alert, then "Next set" or "More time" (max 2 times)
   Future<void> _restDone(TrainerState state) async {
     _ringAlert();
-    final setNumber = state.counter!.setNumber;
+    final setNumber = state.assessment!.sets.setNumber;
     final left = TrainerBloc.maxExtensions - state.extraUsed;
     final more = await showDialog<bool>(
       context: context,
@@ -137,7 +138,7 @@ class _TrainerViewState extends State<_TrainerView> with WidgetsBindingObserver 
   /// back button: ask first, so a workout is not lost by accident
   Future<void> _onBack() async {
     final s = _bloc.state;
-    final count = s.counter?.count ?? 0;
+    final count = s.assessment?.reps ?? 0;
     if (count == 0 && !s.paused) {
       Navigator.of(context).pop();
       return;
@@ -146,7 +147,7 @@ class _TrainerViewState extends State<_TrainerView> with WidgetsBindingObserver 
       context: context,
       builder: (c) => SpotDialog(
         title: 'Leave the workout?',
-        content: Text('Your ${count.toInt()} reps are not saved and will be lost.'),
+        content: Text('Your $count reps are not saved and will be lost.'),
         actions: [
           SpotButton('Stay', onPressed: () => Navigator.pop(c, false)),
           SpotButton('Leave', kind: SpotKind.destructive, onPressed: () => Navigator.pop(c, true)),
@@ -178,24 +179,24 @@ class _TrainerViewState extends State<_TrainerView> with WidgetsBindingObserver 
 
   /// app bar buttons; each one redraws itself when the bloc changes
   List<Widget> _actions() {
-    Widget watch(Widget Function(RepCounter c) build) => BlocBuilder<TrainerBloc, TrainerState>(
-          buildWhen: (a, b) => a.panelVersion != b.panelVersion || a.counter != b.counter,
+    Widget watch(Widget Function(PostureAssessment c) build) => BlocBuilder<TrainerBloc, TrainerState>(
+          buildWhen: (a, b) => a.panelVersion != b.panelVersion || a.assessment != b.assessment,
           builder: (context, state) =>
-              state.counter == null ? const SizedBox.shrink() : build(state.counter!),
+              state.assessment == null ? const SizedBox.shrink() : build(state.assessment!),
         );
     return [
       _labeled(Icons.timer_outlined, 'Timer', 'Rest timer', _restSettings),
-      if (widget.exercise.name.contains('Bench'))
+      if (widget.ruleSet.exerciseId == ExerciseKind.benchPress.exerciseId)
         watch((c) => IconButton(
-              tooltip: c.lyingCheck ? 'Lying check ON (tap to turn off)' : 'Lying check OFF',
-              icon: Icon(c.lyingCheck ? Icons.bed : Icons.bed_outlined),
-              color: c.lyingCheck ? Sp.mint : Sp.outline,
+              tooltip: c.lyingCheck ?? true ? 'Lying check ON (tap to turn off)' : 'Lying check OFF',
+              icon: Icon(c.lyingCheck ?? true ? Icons.bed : Icons.bed_outlined),
+              color: c.lyingCheck ?? true ? Sp.mint : Sp.outline,
               onPressed: () => _bloc.add(LyingCheckToggled()),
             )),
-      if (widget.exercise.name.contains('Curl'))
+      if (widget.ruleSet.exerciseId == ExerciseKind.bicepsCurl.exerciseId)
         watch((c) => PopupMenuButton<int>(
           tooltip: 'Arms',
-          initialValue: c.armMode,
+          initialValue: c.arms?.mode ?? 0,
           onSelected: (m) => _bloc.add(ArmModeChanged(armMode: m)),
           itemBuilder: (_) => const [
             PopupMenuItem(value: 0, child: Text('Right arm')),
@@ -213,7 +214,7 @@ class _TrainerViewState extends State<_TrainerView> with WidgetsBindingObserver 
               border: Border.all(color: Sp.line),
             ),
             child: Row(mainAxisSize: MainAxisSize.min, children: [
-              Text(armShort[c.armMode].toUpperCase(), style: Sp.labelMd.copyWith(color: Sp.white)),
+              Text(armShort[c.arms?.mode ?? 0].toUpperCase(), style: Sp.labelMd.copyWith(color: Sp.white)),
               const Icon(Icons.arrow_drop_down, size: 20),
             ]),
           ),
@@ -228,6 +229,13 @@ class _TrainerViewState extends State<_TrainerView> with WidgetsBindingObserver 
         BlocListener<TrainerBloc, TrainerState>(
           listenWhen: (a, b) => a.beeps != b.beeps,
           listener: (_, _) => _beep(),
+        ),
+        BlocListener<TrainerBloc, TrainerState>(
+          listenWhen: (a, b) => a.errorMessage == null && b.errorMessage != null,
+          listener: (context, state) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.errorMessage!)));
+            Navigator.of(context).pop();
+          },
         ),
         BlocListener<TrainerBloc, TrainerState>(
           listenWhen: (a, b) => !a.restFinished && b.restFinished,
@@ -246,7 +254,7 @@ class _TrainerViewState extends State<_TrainerView> with WidgetsBindingObserver 
               child: Column(children: [
                 Expanded(
                   child: CameraView(
-                    title: widget.exercise.name,
+                    title: widget.ruleSet.nameEn,
                     onFrame: (frame) => _bloc.add(TrainerFrameReceived(frame: frame)),
                     actions: _actions(),
                     overlay: BlocBuilder<TrainerBloc, TrainerState>(
@@ -262,7 +270,7 @@ class _TrainerViewState extends State<_TrainerView> with WidgetsBindingObserver 
             Positioned.fill(
               child: BlocBuilder<TrainerBloc, TrainerState>(
                 buildWhen: (a, b) => a.phase != b.phase || a.tick != b.tick || a.extraUsed != b.extraUsed,
-                builder: (context, state) => state.paused && state.counter != null
+                builder: (context, state) => state.paused && state.assessment != null
                     ? RestOverlay(state: state, onEditTime: _restSettings)
                     : const SizedBox.shrink(),
               ),

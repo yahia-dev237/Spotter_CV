@@ -1,0 +1,832 @@
+[
+  {
+    "exerciseId": "squat",
+    "nameAr": "سكوات بالبار",
+    "nameEn": "Barbell Back Squat",
+    "requiredLandmarks": [
+      11,
+      12,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      31,
+      32
+    ],
+    "repThresholds": {
+      "primaryAngle": "knee",
+      "lowerDeg": 95,
+      "upperDeg": 165,
+      "smoothing": "per-frame 0.7 old + 0.3 new",
+      "depthClasses": {
+        "partial": {
+          "maxKneeAngleDeg": 130,
+          "countsAsRep": true
+        },
+        "deep": {
+          "maxKneeAngleDeg": 110
+        },
+        "extraDeep": {
+          "maxKneeAngleDeg": 95
+        }
+      }
+    },
+    "rules": [
+      {
+        "id": "trunk_lean",
+        "fault": "forward_lean",
+        "metric": "trunkAngleFromVertical",
+        "comparator": "gt",
+        "warnThreshold": 60,
+        "rejectThreshold": 70,
+        "threshold": 60,
+        "severity": 3,
+        "activeWhen": "always",
+        "adaptive": "limit += clamp((thigh/torso - 1) * 40, -10, +20); measured standing, frozen while depth < 15%",
+        "cueKey": "forward_lean",
+        "note": "Auto-adapts 50-80 based on user thigh/torso ratio"
+      },
+      {
+        "id": "stance_narrow",
+        "fault": "stance_narrow",
+        "metric": "ankleToShoulderWidthRatio",
+        "comparator": "lt",
+        "warnThreshold": 0.6,
+        "rejectThreshold": null,
+        "threshold": 0.6,
+        "severity": 1,
+        "activeWhen": "facing_camera",
+        "cueKey": "stance_narrow"
+      },
+      {
+        "id": "stance_wide",
+        "fault": "stance_wide",
+        "metric": "ankleToShoulderWidthRatio",
+        "comparator": "gt",
+        "warnThreshold": 2.0,
+        "rejectThreshold": null,
+        "threshold": 2.0,
+        "severity": 1,
+        "activeWhen": "facing_camera",
+        "cueKey": "stance_wide"
+      },
+      {
+        "id": "knee_cave",
+        "fault": "knee_valgus",
+        "metric": "kneeCaveInwardShinLengths",
+        "comparator": "gt",
+        "warnThreshold": 0.15,
+        "rejectThreshold": 0.25,
+        "threshold": 0.15,
+        "severity": 3,
+        "activeWhen": "facing_camera_depth_ge_30",
+        "usesToe": true,
+        "cueKey": "knee_valgus",
+        "note": "Worst knee counts; uses toe so deliberate toe-out stance is not punished"
+      },
+      {
+        "id": "asymmetry",
+        "fault": "asymmetry",
+        "metric": "leftRightKneeAngleDiffDeg",
+        "comparator": "gt",
+        "warnThreshold": 25,
+        "rejectThreshold": null,
+        "threshold": 25,
+        "severity": 1,
+        "activeWhen": "facing_camera_depth_ge_40_not_front_deadlift",
+        "cueKey": "asymmetry"
+      }
+    ],
+    "cues": {
+      "knee_valgus": {
+        "ar": "ركبك داخلة لجوه، افتحها ناحية صوابع رجلك",
+        "en": "Knees are caving in — push them out over your toes"
+      },
+      "depth": {
+        "ar": "انزل أكتر شوية",
+        "en": "Go a bit deeper"
+      },
+      "forward_lean": {
+        "ar": "صدرك لقدّام أوي، ارفعه لفوق",
+        "en": "Too much forward lean — chest up"
+      },
+      "lumbar_flexion": {
+        "ar": "ضهرك بيتقوّس، خليه مفرود",
+        "en": "Your lower back is rounding — keep it flat"
+      },
+      "asymmetry": {
+        "ar": "وزّع الحمل على الجنبين بالتساوي",
+        "en": "Even out the load between both sides"
+      },
+      "good_rep": {
+        "ar": "تمام، كمّل",
+        "en": "Good rep, keep going"
+      },
+      "stance_narrow": {
+        "ar": "وقفك ضيق، وسّعه شوية",
+        "en": "Stance too narrow — widen it a bit"
+      },
+      "stance_wide": {
+        "ar": "وقفك واسع أوي، قرّبه شوية",
+        "en": "Stance too wide — narrow it a bit"
+      }
+    }
+  },
+  {
+    "exerciseId": "deadlift",
+    "nameAr": "ديدليفت",
+    "nameEn": "Conventional Deadlift",
+    "requiredLandmarks": [
+      7,
+      8,
+      11,
+      12,
+      15,
+      16,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      31,
+      32
+    ],
+    "repThresholds": {
+      "primaryAngle": "hip",
+      "lowerDeg": 100,
+      "upperDeg": 165,
+      "hipAngleVariants": {
+        "conventional": {
+          "topDeg": 165,
+          "bottomDeg": 100
+        },
+        "sumo": {
+          "topDeg": 158,
+          "bottomDeg": 145
+        },
+        "romanian": {
+          "topDeg": 158,
+          "bottomDeg": 130
+        }
+      },
+      "barPosition": {
+        "landmarks": {
+          "wrists": [
+            15,
+            16
+          ],
+          "knees": [
+            25,
+            26
+          ],
+          "ankles": [
+            27,
+            28
+          ]
+        },
+        "topShinLengths": 0.81,
+        "bottomShinLengths": 0,
+        "source": "Winter 2009 (after Drillis & Contini) + Escamilla 2000 + Hanen 2025"
+      },
+      "bottomReachedBarPct": {
+        "side": 90,
+        "front": 85
+      },
+      "lockoutBarPct": 12,
+      "squatInsteadOfDeadliftKneeAngleDeg": 100
+    },
+    "rules": [
+      {
+        "id": "spine_neutral",
+        "fault": "spine_drift",
+        "metric": "spineAngleDeviationFromOwnUprightDeg",
+        "comparator": "gt",
+        "warnThreshold": 25,
+        "rejectThreshold": null,
+        "threshold": 25,
+        "severity": 1,
+        "activeWhen": "side_view",
+        "cueKey": "spine_drift",
+        "note": "Cannot see lumbar spine; warn only. Facing camera: 'back not checked'"
+      },
+      {
+        "id": "knee_bend_too_much_conventional",
+        "fault": "knee_bend_excessive",
+        "metric": "avgHipKneeAnkleAngleDeg",
+        "comparator": "lt",
+        "warnThreshold": 85,
+        "rejectThreshold": null,
+        "threshold": 85,
+        "severity": 2,
+        "activeWhen": "side_view_bar_ge_60",
+        "cueKey": "knee_bend_excessive"
+      },
+      {
+        "id": "knees_too_straight_conventional",
+        "fault": "knees_too_straight",
+        "metric": "avgHipKneeAnkleAngleDeg",
+        "comparator": "gt",
+        "warnThreshold": 150,
+        "rejectThreshold": null,
+        "threshold": 150,
+        "severity": 2,
+        "activeWhen": "side_view_bar_ge_60",
+        "cueKey": "knees_too_straight"
+      },
+      {
+        "id": "stance_width_conventional",
+        "fault": "stance_width",
+        "metric": "ankleToShoulderWidthRatio",
+        "comparator": "range",
+        "warnThresholdMin": 0.4,
+        "warnThresholdMax": 1.6,
+        "rejectThreshold": null,
+        "threshold": 0.4,
+        "severity": 1,
+        "activeWhen": "facing_camera",
+        "cueKey": "stance_width",
+        "note": "Conventional stance is about hip width, narrower than shoulders, so 0.4 not 0.6"
+      },
+      {
+        "id": "knee_cave",
+        "fault": "knee_valgus",
+        "metric": "kneeCaveInwardShinLengths",
+        "comparator": "gt",
+        "warnThreshold": 0.3,
+        "rejectThreshold": null,
+        "threshold": 0.3,
+        "severity": 1,
+        "activeWhen": "facing_camera_depth_ge_30",
+        "cueKey": "knee_valgus",
+        "note": "Knee cave is a squat fault. Looser limit and warn-only because toe-out feet fired on normal reps and painted the bar red"
+      },
+      {
+        "id": "squat_instead_of_deadlift",
+        "fault": "squat_instead_of_deadlift",
+        "metric": "maxKneeAngleAtBottomDeg",
+        "comparator": "lt",
+        "warnThreshold": null,
+        "rejectThreshold": 100,
+        "threshold": 100,
+        "severity": 3,
+        "activeWhen": "side_view",
+        "cueKey": "squat_instead_of_deadlift",
+        "note": "Half squat starts at 110° (Schoenfeld 2010) - 10° pose error (Kim 2023) = 100. Conventional deadlift knees ~120° at lift-off (Hanen 2025)"
+      }
+    ],
+    "cues": {
+      "lumbar_flexion": {
+        "ar": "ضهرك بيتقوّس، خليه مفرود",
+        "en": "Your lower back is rounding — keep it flat"
+      },
+      "hips_rise_early": {
+        "ar": "الحوض بيطلع قبل الصدر، ادفع الأرض برجلك الأول",
+        "en": "Hips are rising too early — drive through your legs first"
+      },
+      "incomplete_lockout": {
+        "ar": "قف مفرود تمامًا في الآخر",
+        "en": "Stand tall and lock out at the top"
+      },
+      "asymmetry": {
+        "ar": "وزّع الحمل على الجنبين بالتساوي",
+        "en": "Even out the load between both sides"
+      },
+      "good_rep": {
+        "ar": "تمام، كمّل",
+        "en": "Good rep, keep going"
+      },
+      "spine_drift": {
+        "ar": "ضهرك مش مفرود كويس من الجنب",
+        "en": "Your back isn't neutral from the side view"
+      },
+      "knee_bend_excessive": {
+        "ar": "ركبك منحنية أكتر من اللازم للديدليفت",
+        "en": "Knees are bending too much for a deadlift"
+      },
+      "knees_too_straight": {
+        "ar": "ركبك مفرودة أوي، اعمل hinge أكتر",
+        "en": "Knees are too straight — hinge more"
+      },
+      "stance_width": {
+        "ar": "عرض الوقفة مش مناسب",
+        "en": "Stance width is off"
+      },
+      "knee_valgus": {
+        "ar": "",
+        "en": ""
+      },
+      "squat_instead_of_deadlift": {
+        "ar": "ديديكت مش صحيح — شكله سكوات",
+        "en": "That's a squat, not a deadlift"
+      }
+    }
+  },
+  {
+    "exerciseId": "bench_press",
+    "nameAr": "بنش بريس بالبار",
+    "nameEn": "Barbell Bench Press",
+    "requiredLandmarks": [
+      0,
+      7,
+      8,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      19,
+      20,
+      23,
+      24
+    ],
+    "repThresholds": {
+      "primaryAngle": "elbow",
+      "lowerDeg": 92,
+      "upperDeg": 145,
+      "usesStraighterArm": true,
+      "note": "Both arms must bend: the straighter arm is used so moving one side cannot count a rep"
+    },
+    "rules": [
+      {
+        "id": "elbow_flare_wide",
+        "fault": "elbow_flare",
+        "metric": "hipShoulderElbowAngleDeg",
+        "comparator": "gt",
+        "warnThreshold": 75,
+        "rejectThreshold": null,
+        "threshold": 75,
+        "severity": 2,
+        "activeWhen": "head_foot_view_depth_ge_50",
+        "cueKey": "elbow_flare",
+        "note": "From the side the angle is about 90° on every normal rep, so flare is judged only from the head/foot end"
+      },
+      {
+        "id": "elbow_flare_tucked",
+        "fault": "elbow_tucked",
+        "metric": "hipShoulderElbowAngleDeg",
+        "comparator": "lt",
+        "warnThreshold": 30,
+        "rejectThreshold": null,
+        "threshold": 30,
+        "severity": 2,
+        "activeWhen": "head_foot_view_depth_ge_50",
+        "cueKey": "elbow_tucked",
+        "note": "'Hips hidden - flare unchecked' note when hips are not seen"
+      },
+      {
+        "id": "forearm_not_vertical",
+        "fault": "forearm_tilt",
+        "metric": "forearmDeviationFromVerticalDeg",
+        "comparator": "gt",
+        "warnThreshold": 25,
+        "rejectThreshold": null,
+        "threshold": 25,
+        "severity": 2,
+        "activeWhen": "depth_ge_70",
+        "cueKey": "forearm_tilt",
+        "note": "Wrist should stack over the elbow near the chest"
+      },
+      {
+        "id": "wrist_bent_back",
+        "fault": "wrist_bent_back",
+        "metric": "elbowWristIndexFingerAngleDeg",
+        "comparator": "lt",
+        "warnThreshold": 145,
+        "rejectThreshold": null,
+        "threshold": 145,
+        "severity": 2,
+        "activeWhen": "depth_ge_30",
+        "cueKey": "wrist_bent_back"
+      },
+      {
+        "id": "bar_path_drift",
+        "fault": "bar_path_drift",
+        "metric": "wristDriftArmLengths",
+        "comparator": "gt",
+        "warnThreshold": 0.5,
+        "rejectThreshold": null,
+        "threshold": 0.5,
+        "severity": 2,
+        "activeWhen": "always",
+        "cueKey": "bar_path_drift",
+        "note": "Wrists stand in for the bar; drift measured from the start line (barX)"
+      },
+      {
+        "id": "lowering_too_fast",
+        "fault": "lowering_too_fast",
+        "metric": "elbowAngleSpeedDegPerSec",
+        "comparator": "gt",
+        "warnThreshold": 160,
+        "rejectThreshold": null,
+        "threshold": 160,
+        "severity": 2,
+        "activeWhen": "descending_before_bottom",
+        "cueKey": "lowering_too_fast",
+        "note": "Bouncing the bar off the chest is a classic chest/shoulder injury"
+      },
+      {
+        "id": "glutes_lift",
+        "fault": "glutes_lift",
+        "metric": "shoulderHipTiltChangeDeg",
+        "comparator": "gt",
+        "warnThreshold": 12,
+        "rejectThreshold": null,
+        "threshold": 12,
+        "severity": 2,
+        "activeWhen": "side_view_lying",
+        "cueKey": "glutes_lift"
+      },
+      {
+        "id": "uneven_bar",
+        "fault": "uneven_bar",
+        "metric": "wristHeightGapShoulderWidths",
+        "comparator": "gt",
+        "warnThreshold": 0.25,
+        "rejectThreshold": null,
+        "threshold": 0.25,
+        "severity": 2,
+        "activeWhen": "facing_camera_both_wrists_seen",
+        "cueKey": "uneven_bar"
+      },
+      {
+        "id": "lying_down_torso_tilt",
+        "fault": "not_lying_down",
+        "metric": "shoulderHipTiltFromVerticalDeg",
+        "comparator": "lt",
+        "warnThreshold": 35,
+        "rejectThreshold": 35,
+        "threshold": 35,
+        "severity": 3,
+        "activeWhen": "hips_seen_or_head_line",
+        "cueKey": "not_lying_down",
+        "note": "≥35° from vertical = lying. Rep blocked if not lying. Hips hidden = 'unknown', not blocked"
+      },
+      {
+        "id": "lying_down_torso_ratio",
+        "fault": "not_lying_down",
+        "metric": "torsoLengthToShoulderWidthRatio",
+        "comparator": "lt",
+        "warnThreshold": 0.9,
+        "rejectThreshold": 0.9,
+        "threshold": 0.9,
+        "severity": 3,
+        "activeWhen": "head_foot_view",
+        "cueKey": "not_lying_down",
+        "note": "Foreshortened torso = lying seen from the head or foot end"
+      },
+      {
+        "id": "asymmetry",
+        "fault": "asymmetry",
+        "metric": "leftRightElbowAngleDiffDeg",
+        "comparator": "gt",
+        "warnThreshold": 25,
+        "rejectThreshold": null,
+        "threshold": 25,
+        "severity": 1,
+        "activeWhen": "facing_camera_depth_ge_40_not_front_deadlift",
+        "cueKey": "asymmetry"
+      }
+    ],
+    "cues": {
+      "elbow_flare": {
+        "ar": "كوعك بعيد عن جسمك، قرّبه شوية",
+        "en": "Elbows flaring out — tuck them in a little"
+      },
+      "depth": {
+        "ar": "نزّل البار لحد صدرك",
+        "en": "Lower the bar all the way to your chest"
+      },
+      "incomplete_lockout": {
+        "ar": "افرد دراعك لآخره",
+        "en": "Fully extend your arms at the top"
+      },
+      "asymmetry": {
+        "ar": "الدراعين مش متساويين، اضغط بالتساوي",
+        "en": "Arms are uneven — press evenly"
+      },
+      "good_rep": {
+        "ar": "تمام، كمّل",
+        "en": "Good rep, keep going"
+      },
+      "elbow_tucked": {
+        "ar": "كوعك قريب أوي من جسمك",
+        "en": "Elbows tucked too far in"
+      },
+      "forearm_tilt": {
+        "ar": "ساعدك مش عامود على البار",
+        "en": "Forearm isn't vertical under the bar"
+      },
+      "wrist_bent_back": {
+        "ar": "معصمك مردوف لورا، شدّه لفوق",
+        "en": "Wrist is bent back — keep it stacked over the elbow"
+      },
+      "bar_path_drift": {
+        "ar": "مسار البار مش مستقيم",
+        "en": "Bar path is drifting sideways"
+      },
+      "lowering_too_fast": {
+        "ar": "نزّل البار ببطء، متارتطمش بصدرك",
+        "en": "Lower the bar slowly — don't bounce off the chest"
+      },
+      "glutes_lift": {
+        "ar": "مؤخرتك بترتفع من البنش",
+        "en": "Glutes lifting off the bench — keep them down"
+      },
+      "uneven_bar": {
+        "ar": "البار مائل، اضغط بالتساوي",
+        "en": "Bar is uneven — press evenly"
+      },
+      "not_lying_down": {
+        "ar": "ارقد على البنش الأول",
+        "en": "Lie flat on the bench first"
+      }
+    }
+  },
+  {
+    "exerciseId": "overhead_press",
+    "nameAr": "ضغط الأكتاف بالبار",
+    "nameEn": "Standing Overhead Press",
+    "requiredLandmarks": null,
+    "repThresholds": null,
+    "rules": [
+      {
+        "id": "back_arch",
+        "fault": "back_arch",
+        "metric": "trunkLeanBackDeg",
+        "comparator": "gt",
+        "threshold": 10,
+        "severity": 3,
+        "cueKey": "back_arch"
+      },
+      {
+        "id": "incomplete_lockout",
+        "fault": "incomplete_lockout",
+        "metric": "elbowAngleAtTop",
+        "comparator": "lt",
+        "threshold": 165,
+        "severity": 1,
+        "cueKey": "incomplete_lockout"
+      },
+      {
+        "id": "asymmetry",
+        "fault": "asymmetry",
+        "metric": "leftRightElbowAngleDiffDeg",
+        "comparator": "gt",
+        "threshold": 15,
+        "severity": 1,
+        "cueKey": "asymmetry"
+      }
+    ],
+    "cues": {
+      "back_arch": {
+        "ar": "ضهرك بيقوّس لورا، شدّ بطنك",
+        "en": "You're arching your back — brace your core"
+      },
+      "incomplete_lockout": {
+        "ar": "افرد دراعك فوق راسك لآخره",
+        "en": "Fully extend your arms overhead"
+      },
+      "asymmetry": {
+        "ar": "الدراعين مش متساويين، اضغط بالتساوي",
+        "en": "Arms are uneven — press evenly"
+      },
+      "good_rep": {
+        "ar": "تمام، كمّل",
+        "en": "Good rep, keep going"
+      }
+    }
+  },
+  {
+    "exerciseId": "barbell_row",
+    "nameAr": "تجديف بالبار",
+    "nameEn": "Bent-Over Barbell Row",
+    "requiredLandmarks": null,
+    "repThresholds": null,
+    "rules": [
+      {
+        "id": "lumbar_flexion",
+        "fault": "lumbar_flexion",
+        "metric": "lumbarFlexionDeg",
+        "comparator": "gt",
+        "threshold": 15,
+        "severity": 3,
+        "cueKey": "lumbar_flexion"
+      },
+      {
+        "id": "torso_swing",
+        "fault": "torso_swing",
+        "metric": "trunkAngleChangeDeg",
+        "comparator": "gt",
+        "threshold": 20,
+        "severity": 2,
+        "cueKey": "torso_swing"
+      },
+      {
+        "id": "short_rom",
+        "fault": "short_rom",
+        "metric": "elbowAngleAtPull",
+        "comparator": "gt",
+        "threshold": 100,
+        "severity": 2,
+        "cueKey": "short_rom"
+      },
+      {
+        "id": "asymmetry",
+        "fault": "asymmetry",
+        "metric": "leftRightElbowAngleDiffDeg",
+        "comparator": "gt",
+        "threshold": 15,
+        "severity": 1,
+        "cueKey": "asymmetry"
+      }
+    ],
+    "cues": {
+      "lumbar_flexion": {
+        "ar": "ضهرك بيتقوّس، خليه مفرود",
+        "en": "Your lower back is rounding — keep it flat"
+      },
+      "torso_swing": {
+        "ar": "ثبّت جسمك ومتتأرجحش",
+        "en": "Keep your torso still — don't swing"
+      },
+      "short_rom": {
+        "ar": "اسحب البار أكتر ناحية بطنك",
+        "en": "Pull the bar closer to your stomach"
+      },
+      "asymmetry": {
+        "ar": "وزّع الحمل على الجنبين بالتساوي",
+        "en": "Even out the load between both sides"
+      },
+      "good_rep": {
+        "ar": "تمام، كمّل",
+        "en": "Good rep, keep going"
+      }
+    }
+  },
+  {
+    "exerciseId": "biceps_curl",
+    "nameAr": "بايسيبس كيرل",
+    "nameEn": "Biceps Curl",
+    "requiredLandmarks": [
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      23,
+      24
+    ],
+    "repThresholds": {
+      "primaryAngle": "elbow",
+      "lowerDeg": 64,
+      "upperDeg": 160,
+      "facingCamera": {
+        "topDeg": 180,
+        "bottomDeg": 30,
+        "note": "Equivalent elbow angle = 180 - acos(wrist drop / hanging drop); hanging drop stored in shoulder widths. STRAIGHTER of 2D and wrist-height angles is used."
+      },
+      "upperArmFromVerticalLimitDeg": 45,
+      "upperArmBarCapPct": 90,
+      "maxSpeedDegPerSec": 400,
+      "maxSpeedWarnMultiplier": 1.3,
+      "smoothing": "per-time 0.7 old + 0.3 new at 15 fps (pythonFps = 15)"
+    },
+    "rules": [
+      {
+        "id": "elbow_drift",
+        "fault": "elbow_drift",
+        "metric": "hipShoulderElbowAngleDeg",
+        "comparator": "gt",
+        "warnThreshold": 25,
+        "rejectThreshold": 55,
+        "threshold": 25,
+        "severity": 3,
+        "activeWhen": "always",
+        "overrideKey": "elbowDrift / elbowDriftReject",
+        "cueKey": "elbow_drift",
+        "note": "Upper arm should stay near the torso. Side on, the far hip wobbles so it only REJECTS when far past the limit"
+      },
+      {
+        "id": "body_swing",
+        "fault": "body_swing",
+        "metric": "leanChangeVsOwnStartDeg",
+        "comparator": "gt",
+        "warnThreshold": 12,
+        "rejectThreshold": 32,
+        "threshold": 12,
+        "severity": 3,
+        "activeWhen": "always",
+        "overrideKey": "swing / swingReject",
+        "cueKey": "body_swing",
+        "note": "Compared with the user's own start posture (not a fixed number). Reject only when the body clearly moves"
+      },
+      {
+        "id": "shoulder_shrug",
+        "fault": "shoulder_shrug",
+        "metric": "torsoLengthChangePct",
+        "comparator": "gt",
+        "warnThreshold": 12,
+        "rejectThreshold": null,
+        "threshold": 12,
+        "severity": 1,
+        "activeWhen": "always",
+        "overrideKey": "shrug",
+        "cueKey": "shoulder_shrug",
+        "note": "Facing camera the label is 'Leaning - keep still'"
+      },
+      {
+        "id": "torso_twist",
+        "fault": "torso_twist",
+        "metric": "shoulderWidthChangePct",
+        "comparator": "gt",
+        "warnThreshold": 20,
+        "rejectThreshold": null,
+        "threshold": 20,
+        "severity": 1,
+        "activeWhen": "always",
+        "overrideKey": "twist",
+        "cueKey": "torso_twist"
+      },
+      {
+        "id": "elbow_forward_front",
+        "fault": "elbow_forward",
+        "metric": "upperArmShortenPctVsStart",
+        "comparator": "gt",
+        "warnThreshold": 25,
+        "rejectThreshold": null,
+        "threshold": 25,
+        "severity": 1,
+        "activeWhen": "facing_camera",
+        "overrideKey": "armShorten",
+        "cueKey": "elbow_forward",
+        "note": "An elbow moving toward the lens cannot be seen by the side check, so arm shortening is used"
+      },
+      {
+        "id": "asymmetry",
+        "fault": "asymmetry",
+        "metric": "leftRightElbowAngleDiffDeg",
+        "comparator": "gt",
+        "warnThreshold": 25,
+        "rejectThreshold": null,
+        "threshold": 25,
+        "severity": 1,
+        "activeWhen": "facing_camera_depth_ge_40_not_front_deadlift",
+        "overrideKey": "asym",
+        "cueKey": "asymmetry_arms"
+      },
+      {
+        "id": "too_fast",
+        "fault": "too_fast",
+        "metric": "smoothedElbowAngleSpeedDegPerSec",
+        "comparator": "gt",
+        "warnThreshold": 520,
+        "rejectThreshold": null,
+        "threshold": 520,
+        "severity": 1,
+        "activeWhen": "always",
+        "overrideKey": "maxSpeed",
+        "cueKey": "too_fast",
+        "note": "maxSpeed = 400 for curl (others use 300). Message 'Slow down - control it'"
+      }
+    ],
+    "cues": {
+      "good_rep": {
+        "ar": "تمام، كمّل",
+        "en": "Good rep, keep going"
+      },
+      "elbow_drift": {
+        "ar": "دراعك بيتحرك لقدّام، خليه ثابت جنب جسمك",
+        "en": "Elbow is drifting forward — keep it by your side"
+      },
+      "body_swing": {
+        "ar": "جسمك بيتأرجح، ثبّته",
+        "en": "Body is swinging — stay still"
+      },
+      "shoulder_shrug": {
+        "ar": "كتفك بيرتفع مع الرفعة، ثبّته تحت",
+        "en": "Shoulder is shrugging — keep it down"
+      },
+      "torso_twist": {
+        "ar": "جسمك بيلتف، استكبه لقدّام",
+        "en": "Torso is twisting — square it forward"
+      },
+      "elbow_forward": {
+        "ar": "كوعك بيتقدّم للكاميرا، رجّعه لجنب جسمك",
+        "en": "Elbow moving toward camera — pull it back to your side"
+      },
+      "asymmetry_arms": {
+        "ar": "الدراعين مش متساويين، اضغط بالتساوي",
+        "en": "Arms are uneven — press evenly"
+      },
+      "too_fast": {
+        "ar": "بتهدّي — اعمل تمرين أبطأ",
+        "en": "Slow down — control the rep"
+      }
+    }
+  }
+]

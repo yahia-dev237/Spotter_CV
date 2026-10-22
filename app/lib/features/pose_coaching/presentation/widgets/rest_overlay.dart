@@ -19,7 +19,7 @@ class RestOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bloc = context.read<TrainerBloc>();
-    final c = state.counter!;
+    final c = state.assessment!.sets;
     final endMs = state.getReady ? state.readyEndMs : state.restEndMs;
     final leftMs = math.max(0, endMs - DateTime.now().millisecondsSinceEpoch);
     final leftSec = (leftMs / 1000).ceil();
@@ -35,8 +35,8 @@ class RestOverlay extends StatelessWidget {
         SpotButton('Skip', kind: SpotKind.link, onPressed: () => bloc.add(GetReadySkipped())),
       ]);
     } else {
-      final fat = c.fatigue, sm = c.lastSmooth;
-      final avgForm = c.setFormAverage;
+      final fat = c.fatigue, sm = c.smoothness;
+      final avgForm = c.formAverage;
       body = Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Center(child: SpotChip('Rest · set ${c.setNumber} done', dot: Sp.mint)),
         const SizedBox(height: 24),
@@ -64,7 +64,7 @@ class RestOverlay extends StatelessWidget {
         Row(children: [
           Expanded(child: SpotMetric('Reps', '${c.lastSetReps}')),
           const SizedBox(width: 12),
-          Expanded(child: SpotMetric('Time', mmss(c.lastSetSecs))),
+          Expanded(child: SpotMetric('Time', mmss(c.lastSetSeconds))),
           if (avgForm != null) ...[
             const SizedBox(width: 12),
             Expanded(

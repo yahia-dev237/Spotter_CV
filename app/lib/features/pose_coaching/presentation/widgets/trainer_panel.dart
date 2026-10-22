@@ -38,35 +38,40 @@ class TrainerPanel extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
             child: BlocBuilder<TrainerBloc, TrainerState>(
-              buildWhen: (a, b) => a.panelVersion != b.panelVersion || a.counter != b.counter,
+              buildWhen: (a, b) => a.panelVersion != b.panelVersion || a.assessment != b.assessment,
               builder: (context, state) =>
-                  state.counter == null ? const SizedBox.shrink() : _panelBody(context, state),
+                  state.assessment == null ? const SizedBox.shrink() : _panelBody(context, state),
             ),
           ),
         ),
       );
 
   Widget _panelBody(BuildContext context, TrainerState state) {
-    final c = state.counter!;
+    final c = state.assessment!;
+    final sets = c.sets;
     final t = now();
-    final msg = c.feedback(t);
+    final msg = c.feedback;
     final msgColor = feedbackColor(msg.tone);
-    final fc = formLevelColor(c.formLevel(t));
-    final fat = c.fatigue, sm = c.lastSmooth;
+    final fc = formLevelColor(c.formLevel);
+    final fat = sets.fatigue, sm = sets.smoothness;
+    final arms = c.arms, depths = c.squatDepths;
     final bloc = context.read<TrainerBloc>();
 
     final chips = <Widget>[
-      if (c.inSet)
-        SpotChip('Set ${c.setNumber} · ${c.setReps} reps · ${mmss(t - c.setStart)}', dot: Sp.mint)
+      if (sets.inSet)
+        SpotChip('Set ${sets.setNumber} · ${sets.setReps} reps · ${mmss(t - sets.setStartTime)}', dot: Sp.mint)
       else
-        SpotChip('Set ${c.setNumber} · start lifting', dot: formNA),
-      if (c.isCurl)
+        SpotChip('Set ${sets.setNumber} · start lifting', dot: formNA),
+      if (arms != null)
         SpotChip(
-            c.altMode ? 'Next ${c.altRightNext ? 'R' : 'L'} · R ${c.repsR} · L ${c.repsL}' : armNames[c.armMode],
-            dot: c.altMode ? formWarn : Sp.mint),
-      if (c.isSquat) SpotChip('Partial ${c.partialReps} · Deep ${c.deepReps} · Extra ${c.extraReps}', dot: Sp.mint),
+            arms.alternate
+                ? 'Next ${arms.rightNext ? 'R' : 'L'} · R ${arms.repsRight} · L ${arms.repsLeft}'
+                : armNames[arms.mode],
+            dot: arms.alternate ? formWarn : Sp.mint),
+      if (depths != null)
+        SpotChip('Partial ${depths.partial} · Deep ${depths.deep} · Extra ${depths.extraDeep}', dot: Sp.mint),
       if (sm != null) SpotChip('Smooth ${sm.round()}', dot: Sp.mint),
-      if (c.inSet && fat != null) SpotChip('Fatigue ${fat.round()}% ${fatigueWord(fat)}', dot: fatigueColor(fat)),
+      if (sets.inSet && fat != null) SpotChip('Fatigue ${fat.round()}% ${fatigueWord(fat)}', dot: fatigueColor(fat)),
     ];
 
     return Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
@@ -121,11 +126,11 @@ class TrainerPanel extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
               child: Column(mainAxisAlignment: MainAxisAlignment.spaceBetween, crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text('REPS DONE', style: Sp.labelSm.copyWith(color: Sp.muted)),
-                Text('${c.count.toInt()}', style: Sp.displayMetric.copyWith(fontSize: 44, height: 1, color: Sp.white)),
+                Text('${c.reps}', style: Sp.displayMetric.copyWith(fontSize: 44, height: 1, color: Sp.white)),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(2),
                   child: LinearProgressIndicator(
-                    value: (c.curPer / 100).clamp(0.0, 1.0).toDouble(),
+                    value: (c.percent / 100).clamp(0.0, 1.0).toDouble(),
                     minHeight: 4,
                     color: fc,
                     backgroundColor: Sp.line,
@@ -177,7 +182,7 @@ class TrainerPanel extends StatelessWidget {
         _squareBtn(Icons.add, 'Add a rep', () => bloc.add(const RepAdjusted(delta: 1))),
         const SizedBox(width: 8),
         Expanded(
-          child: SpotButton(c.setReps > 0 ? 'Finish set · ${c.setReps} reps' : 'Finish set',
+          child: SpotButton(sets.setReps > 0 ? 'Finish set · ${sets.setReps} reps' : 'Finish set',
               icon: Icons.flag_outlined, onPressed: onFinishSet),
         ),
       ]),

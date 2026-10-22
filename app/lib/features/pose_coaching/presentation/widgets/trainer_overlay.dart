@@ -11,20 +11,19 @@ import 'package:ai_trainer/features/pose_coaching/presentation/widgets/skeleton_
 /// what is drawn on the camera picture: skeleton, findAngle lines, the depth bar
 /// and (debugHud) the live numbers and fps. All the other text lives in the panel.
 OverlayFrame? trainerOverlay(TrainerState state) {
-  final counter = state.counter, pose = state.pose;
-  if (counter == null || pose == null || state.paused) return null;
+  final a = state.assessment;
+  if (a == null || state.paused) return null;
+  final pose = a.pose;
   final img = OverlayFrame(state.imageWidth, state.imageHeight, mirror: state.isMirrored);
   drawLandmarks(img, pose);
-  for (final a in counter.jointAngles) {
-    drawAngle(img, pose, a);
+  for (final angle in a.jointAngles) {
+    drawAngle(img, pose, angle);
   }
 
-  final e = counter.active;
   final w = img.width, h = img.height;
   // python text sizes were made for a 640x480 (AiTrainer) or 1280x720 picture
-  final k = math.min(w, h) / (counter.exercise.oneSide ? 480 : 720);
+  final k = math.min(w, h) / (a.oneSide ? 480 : 720);
   final hud = img.hud;
-  final t = now();
 
   // debug text that always fits: shrinks, then cuts, instead of running into the bar
   void put(String s, double x, double y, double scale, Color color, double maxW) {
@@ -42,27 +41,24 @@ OverlayFrame? trainerOverlay(TrainerState state) {
   final barX1 = w * 0.88;
   final barX2 = w * 0.96;
 
-  if (counter.tracking) {
+  if (a.isTracking) {
     // depth bar drawn on the camera picture
-    final bar = interp(counter.curPer, 0, 100, barBottom, barTop);
-    final barColor = formLevelColor(counter.formLevel(t));
+    final bar = interp(a.percent, 0, 100, barBottom, barTop);
+    final barColor = formLevelColor(a.formLevel);
 
     hud.rectangle(barX1, barTop, barX2, barBottom, barColor, 3 * k);
     hud.rectangle(barX1, bar, barX2, barBottom, barColor, filled);
-    if (counter.isSquat) {
-      // white ticks: lower = partial line, upper = deep line, top of the bar = extra deep
-      for (final a in counter.depthTickAngles) {
-        final pp = interp(a, e.downAngle, e.upAngle, 100, 0).clamp(0.0, 100.0).toDouble();
-        final yy = interp(pp, 0, 100, barBottom, barTop);
-        hud.rectangle(barX1 - 8 * k, yy, barX2 + 8 * k, yy, Colors.white, 2);
-      }
+    // squat white ticks: lower = partial line, upper = deep line, top of the bar = extra deep
+    for (final pp in a.depthTickPercents) {
+      final yy = interp(pp, 0, 100, barBottom, barTop);
+      hud.rectangle(barX1 - 8 * k, yy, barX2 + 8 * k, yy, Colors.white, 2);
     }
   }
 
   if (debugHud) {
     final maxW = math.max(barX1 - 40 * k - 20, 120.0);
     var dy = h * 0.5;
-    for (final s in counter.debugLines) {
+    for (final s in a.debugLines) {
       put(s, 10, dy, 0.6 * k, formNA, maxW);
       dy += 24 * k;
     }

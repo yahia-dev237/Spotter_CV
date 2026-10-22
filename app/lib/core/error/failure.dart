@@ -8,10 +8,14 @@ abstract class Failure extends Equatable {
   List<Object?> get props => [message];
 }
 
-class PoseFailure extends Failure {
-  const PoseFailure({super.message = 'Pose Failure'});
+class ServerFailure extends Failure {
+  const ServerFailure({super.message = 'Server Failed'});
 }
 
 class CacheFailure extends Failure {
   const CacheFailure({super.message = 'Cache Failed'});
+}
+
+class PoseFailure extends Failure {
+  const PoseFailure({super.message = 'Pose Failure'});
 }

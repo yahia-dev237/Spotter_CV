@@ -52,11 +52,11 @@ class TrainingMenuScreen extends StatelessWidget {
                       ),
                       onPressed: () => _open(
                         context,
-                        TrainerScreen(exercise: state.exercises[i]),
+                        TrainerScreen(ruleSet: state.exercises[i]),
                         'Workout tracking',
                       ),
                       child: Text(
-                        '${i + 1} - ${state.exercises[i].name}',
+                        '${i + 1} - ${state.exercises[i].nameEn}',
                         style: const TextStyle(fontSize: 18),
                       ),
                     ),

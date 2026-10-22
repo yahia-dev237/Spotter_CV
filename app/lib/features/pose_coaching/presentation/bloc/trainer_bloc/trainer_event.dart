@@ -7,13 +7,14 @@ sealed class TrainerEvent extends Equatable {
   List<Object> get props => [];
 }
 
+/// SetStarted in the class diagram: load the exercise (exercises/{exerciseId}) and start counting
 final class TrainerStarted extends TrainerEvent {
-  final Exercise exercise;
+  final String exerciseId;
 
-  const TrainerStarted({required this.exercise});
+  const TrainerStarted({required this.exerciseId});
 
   @override
-  List<Object> get props => [exercise.name];
+  List<Object> get props => [exerciseId];
 }
 
 final class TrainerFrameReceived extends TrainerEvent {

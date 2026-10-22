@@ -10,12 +10,12 @@ sealed class ExerciseMenuState extends Equatable {
 final class ExerciseMenuLoading extends ExerciseMenuState {}
 
 final class ExerciseMenuLoaded extends ExerciseMenuState {
-  final List<Exercise> exercises;
+  final List<ExerciseRuleSet> exercises;
 
   const ExerciseMenuLoaded({required this.exercises});
 
   @override
-  List<Object> get props => [exercises.map((e) => e.name).toList()];
+  List<Object> get props => [exercises];
 }
 
 final class ExerciseMenuError extends ExerciseMenuState {

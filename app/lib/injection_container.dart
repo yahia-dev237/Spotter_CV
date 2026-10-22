@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:get_it/get_it.dart';
 import 'package:ai_trainer/core/camera/input_image_converter.dart';
 import 'package:ai_trainer/features/face_detection/data/datasources/face_detector_data_source.dart';
@@ -8,13 +9,21 @@ import 'package:ai_trainer/features/face_detection/presentation/bloc/face_detect
 import 'package:ai_trainer/features/pose_coaching/data/datasources/exercise_local_data_source.dart';
 import 'package:ai_trainer/features/pose_coaching/data/datasources/landmark_smoother.dart';
 import 'package:ai_trainer/features/pose_coaching/data/datasources/pose_detector_data_source.dart';
-import 'package:ai_trainer/features/pose_coaching/data/repositories/exercise_repository_impl.dart';
+import 'package:ai_trainer/features/pose_coaching/data/repositories/exercise_rule_repository_impl.dart';
 import 'package:ai_trainer/features/pose_coaching/data/repositories/pose_estimator_impl.dart';
-import 'package:ai_trainer/features/pose_coaching/domain/repositories/i_exercise_repository.dart';
+import 'package:ai_trainer/features/pose_coaching/domain/repositories/i_exercise_rule_repository.dart';
 import 'package:ai_trainer/features/pose_coaching/domain/repositories/i_pose_estimator.dart';
+import 'package:ai_trainer/features/pose_coaching/domain/usecases/adjust_rep_count_usecase.dart';
+import 'package:ai_trainer/features/pose_coaching/domain/usecases/change_arm_mode_usecase.dart';
 import 'package:ai_trainer/features/pose_coaching/domain/usecases/detect_pose_usecase.dart';
-import 'package:ai_trainer/features/pose_coaching/domain/usecases/get_exercises_usecase.dart';
+import 'package:ai_trainer/features/pose_coaching/domain/usecases/end_set_usecase.dart';
+import 'package:ai_trainer/features/pose_coaching/domain/usecases/get_exercise_rule_sets_usecase.dart';
 import 'package:ai_trainer/features/pose_coaching/domain/usecases/process_pose_frame_usecase.dart';
+import 'package:ai_trainer/features/pose_coaching/domain/usecases/reset_tracking_usecase.dart';
+import 'package:ai_trainer/features/pose_coaching/domain/usecases/resume_set_usecase.dart';
+import 'package:ai_trainer/features/pose_coaching/domain/usecases/start_coaching_session_usecase.dart';
+import 'package:ai_trainer/features/pose_coaching/domain/usecases/start_next_set_usecase.dart';
+import 'package:ai_trainer/features/pose_coaching/domain/usecases/toggle_lying_check_usecase.dart';
 import 'package:ai_trainer/features/pose_coaching/presentation/bloc/exercise_menu_cubit/exercise_menu_cubit.dart';
 import 'package:ai_trainer/features/pose_coaching/presentation/bloc/pose_bloc/pose_bloc.dart';
 import 'package:ai_trainer/features/pose_coaching/presentation/bloc/trainer_bloc/trainer_bloc.dart';
@@ -33,24 +42,48 @@ Future<void> init() async {
 void initPoseCoaching() {
   // Bloc
   sl.registerFactory(() => ExerciseMenuCubit(getExercises: sl()));
-  sl.registerFactory(() => TrainerBloc(processPoseFrame: sl()));
+  sl.registerFactory(
+    () => TrainerBloc(
+      startCoachingSession: sl(),
+      processPoseFrame: sl(),
+      adjustRepCount: sl(),
+      endSet: sl(),
+      resumeSet: sl(),
+      startNextSet: sl(),
+      resetTracking: sl(),
+      changeArmMode: sl(),
+      toggleLyingCheck: sl(),
+    ),
+  );
   sl.registerFactory(() => PoseBloc(detectPose: sl()));
 
   // Use cases
-  sl.registerLazySingleton(() => GetExercisesUseCase(exerciseRepository: sl()));
+  sl.registerLazySingleton(() => GetExerciseRuleSetsUseCase(exerciseRuleRepository: sl()));
+  sl.registerLazySingleton(() => StartCoachingSessionUseCase(exerciseRuleRepository: sl()));
+  sl.registerLazySingleton(() => AdjustRepCountUseCase());
+  sl.registerLazySingleton(() => EndSetUseCase());
+  sl.registerLazySingleton(() => ResumeSetUseCase());
+  sl.registerLazySingleton(() => StartNextSetUseCase());
+  sl.registerLazySingleton(() => ResetTrackingUseCase());
+  sl.registerLazySingleton(() => ChangeArmModeUseCase());
+  sl.registerLazySingleton(() => ToggleLyingCheckUseCase());
   sl.registerFactory(() => ProcessPoseFrameUseCase(poseEstimator: sl()));
   sl.registerFactory(() => DetectPoseUseCase(poseEstimator: sl()));
 
   // Repositories
-  sl.registerLazySingleton<IExerciseRepository>(
-    () => ExerciseRepositoryImpl(exerciseLocalDataSource: sl()),
+  // when the remote database is ready: register ExerciseRemoteDataSource and pass
+  // exerciseRemoteDataSource: sl() here
+  sl.registerLazySingleton<IExerciseRuleRepository>(
+    () => ExerciseRuleRepositoryImpl(exerciseLocalDataSource: sl()),
   );
   sl.registerFactory<IPoseEstimator>(
     () => PoseEstimatorImpl(poseDetectorDataSource: sl(), landmarkSmoother: sl()),
   );
 
   // Data sources
-  sl.registerLazySingleton<ExerciseLocalDataSource>(() => ExerciseLocalDataSourceImpl());
+  sl.registerLazySingleton<ExerciseLocalDataSource>(
+    () => ExerciseLocalDataSourceImpl(assetBundle: sl()),
+  );
   sl.registerFactory<PoseDetectorDataSource>(
     () => PoseDetectorDataSourceImpl(inputImageConverter: sl()),
   );
@@ -74,5 +107,9 @@ void initFaceDetection() {
 }
 
 void initCore() {
+  // Core
   sl.registerLazySingleton(() => InputImageConverter());
+
+  // External
+  sl.registerLazySingleton<AssetBundle>(() => rootBundle);
 }

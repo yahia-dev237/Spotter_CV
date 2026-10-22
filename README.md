@@ -58,19 +58,35 @@ app/lib/
 ├── core/                      shared: camera frame + converter, errors, use case base, theme, widgets
 └── features/
     ├── pose_coaching/         the 4 trainers, the menu and the Pose Estimation demo
-    │   ├── domain/            entities, IPoseEstimator, IExerciseRepository, use cases, RepCounter
-    │   ├── data/              ML Kit pose detector, landmark smoother, exercise catalogue
+    │   ├── domain/            entities (ExerciseRuleSet, PostureAssessment...), repository interfaces,
+    │   │                      use cases, engine/ (CoachingSession + one engine per exercise)
+    │   ├── data/              ML Kit pose detector, landmark smoother, exercise database (models,
+    │   │                      bundled assets/data/exercises.json, remote data source interface)
     │   └── presentation/      TrainerBloc, PoseBloc, ExerciseMenuCubit, screens, widgets
     └── face_detection/        the Face Detection demo (same layers)
 ```
+
+### Exercise database
+
+Every exercise lives in one document of the exercise database (Firestore collection
+`exercises/{exerciseId}`; the same data is bundled in `app/assets/data/exercises.json` so the app works
+offline). It holds the rep thresholds, the form rules (warn / reject limits) and the coaching cues in
+Arabic and English. The camera trainer reads all its limits from there, so changing a number in the
+database changes the coaching without touching the code. Exercises without `repThresholds` (overhead
+press, barbell row) have no camera tracking yet.
+
+To connect the remote database, implement `ExerciseRemoteDataSource`
+(`features/pose_coaching/data/datasources/exercise_remote_data_source.dart`) and register it in
+`injection_container.dart`; `ExerciseRuleRepositoryImpl` then uses it and falls back to the bundled file.
+`ExerciseRuleSetModel.toJson()` writes a document back for the exercise CRUD.
 
 The Dart code mirrors the Python modules:
 
 | Python | Dart (`app/lib`) |
 |---|---|
 | `Main.py` – choose the training | `features/pose_coaching/presentation/screens/training_menu_screen.dart` |
-| `PoseModule.py` – `findPose`, `findPosition`, `findAngle` | `features/pose_coaching/data/` (ML Kit + smoothing) and `RepCounter` (same angle math) |
-| `AiTrainer.py`, `SquatTrainer.py`, `DeadliftTrainer.py`, `BenchPressTrainer.py` | `features/pose_coaching/domain/services/rep_counter.dart` – one trainer, the 4 exercises are settings |
+| `PoseModule.py` – `findPose`, `findPosition`, `findAngle` | `features/pose_coaching/data/` (ML Kit + smoothing) and `domain/engine/pose_geometry.dart` (same angle math) |
+| `AiTrainer.py`, `SquatTrainer.py`, `DeadliftTrainer.py`, `BenchPressTrainer.py` | `features/pose_coaching/domain/engine/` – `CoachingSession` (shared rep loop) + `exercises/` (one engine per exercise); thresholds come from the exercise database |
 | `FaceDetectionModule` | `features/face_detection/` |
 | `cv2.VideoCapture` loop + `cv2.imshow` | `core/widgets/camera_view.dart` |
 | `cv2.line/circle/rectangle/putText`, `np.interp` | `core/widgets/overlay_canvas.dart`, `core/utils/cv_math.dart` |

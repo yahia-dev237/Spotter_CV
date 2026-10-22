@@ -4,10 +4,11 @@ part of 'trainer_bloc.dart';
 enum WorkoutPhase { active, resting, getReady }
 
 class TrainerState extends Equatable {
-  // rep counting, form and sets of this workout (null until TrainerStarted)
-  final RepCounter? counter;
-  // the last detected pose and the picture it came from
-  final PoseFrame? pose;
+  // what the screen shows: reps, form and sets of this workout (null until started)
+  final PostureAssessment? assessment;
+  // the exercise could not be started (e.g. not in the database)
+  final String? errorMessage;
+  // the picture the last pose came from
   final double imageWidth;
   final double imageHeight;
   final bool isMirrored;
@@ -29,8 +30,8 @@ class TrainerState extends Equatable {
   final int beeps; // a short beep is due
 
   const TrainerState({
-    this.counter,
-    this.pose,
+    this.assessment,
+    this.errorMessage,
     this.imageWidth = 1,
     this.imageHeight = 1,
     this.isMirrored = false,
@@ -55,8 +56,8 @@ class TrainerState extends Equatable {
   bool get paused => phase != WorkoutPhase.active;
 
   TrainerState copyWith({
-    RepCounter? counter,
-    PoseFrame? pose,
+    PostureAssessment? assessment,
+    String? errorMessage,
     double? imageWidth,
     double? imageHeight,
     bool? isMirrored,
@@ -75,8 +76,8 @@ class TrainerState extends Equatable {
     int? beeps,
   }) {
     return TrainerState(
-      counter: counter ?? this.counter,
-      pose: pose ?? this.pose,
+      assessment: assessment ?? this.assessment,
+      errorMessage: errorMessage ?? this.errorMessage,
       imageWidth: imageWidth ?? this.imageWidth,
       imageHeight: imageHeight ?? this.imageHeight,
       isMirrored: isMirrored ?? this.isMirrored,
@@ -98,7 +99,8 @@ class TrainerState extends Equatable {
 
   @override
   List<Object?> get props => [
-    counter,
+    assessment,
+    errorMessage,
     phase,
     restStartMs,
     restEndMs,
